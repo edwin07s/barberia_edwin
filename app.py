@@ -25,10 +25,10 @@ def inicio():
     return 'Servidor Flask conectado a Firebase correctamente'
 
 # Ruta para obtener todos los usuarios
-@app.route('/usuarios', methods=['GET'])
+@app.route('/eventos', methods=['GET'])
 def obtener_usuarios():
     try:
-        docs = db.collection('usuarios').stream()
+        docs = db.collection('eventos').stream()
         usuarios = []
 
         for doc in docs:
@@ -36,7 +36,7 @@ def obtener_usuarios():
             datos['id'] = doc.id  # incluir el ID del documento si es necesario
             usuarios.append(datos)
 
-        return jsonify(usuarios), 200
+        return jsonify(eventos), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
