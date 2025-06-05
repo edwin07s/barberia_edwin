@@ -4,7 +4,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import os
 import json
-import datatime import datatime
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
