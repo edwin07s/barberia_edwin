@@ -20,49 +20,41 @@ db = firestore.client()
 def inicio():
     return 'Servidor Flask conectado a Firebase correctamente'
 
-# Ruta para obtener todas las fechas únicas
-@app.route('/fechas_eventos', methods=['GET'])
-def obtener_fechas_eventos():
+@app.route('/precios', methods=['GET'])
+def obtener_precios():
     try:
-        docs = db.collection('eventos').stream()
-        fechas = list({doc.to_dict().get('fecha') for doc in docs if 'fecha' in doc.to_dict()})
-        return jsonify({'fechas': fechas}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/datos_evento', methods=['POST'])
-def datos_evento():
-    data = request.get_json()
-    fecha_str = data.get('fecha')
-
-    try:
-        # Convertir cadena a objeto datetime
-        fecha = datetime.strptime(fecha_str, "%d de %B de %Y, %I:%M:%S %p UTC-6")
-
-        query = db.collection('eventos').where('fecha', '==', fecha)
-        resultados = query.stream()
-        datos = [doc.to_dict() for doc in resultados]
-        return jsonify({'datos': datos}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-#  Ruta para actualizar el abono de un evento por fecha
-@app.route('/actualizar_abono', methods=['POST'])
-def actualizar_abono():
-    data = request.get_json()
-    fecha = data.get('fecha')
-    abono = data.get('abono', 0)
-
-    try:
-        docs = db.collection('eventos').where('fecha', '==', fecha).stream()
+        docs = db.collection('precios').stream()
+        precios = []
         for doc in docs:
-            evento = doc.to_dict()
-            abono_actual = evento.get('cantidadAbono', 0)
-            nuevo_abono = abono_actual + abono
-            db.collection('eventos').document(doc.id).update({'cantidadAbono': nuevo_abono})
-        return jsonify({'mensaje': 'Abono actualizado correctamente'}), 200
+            data = doc.to_dict()
+            motivo = data.get('motivo')
+            if motivo in ['foto', 'video']:
+                precios.append({
+                    'id': doc.id,
+                    'motivo': motivo,
+                    'precio': data.get('precio', 0),
+                    'tiempo': data.get('tiempo', 1)  # opcional
+                })
+        return jsonify({'precios': precios}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+@app.route('/calcular_precio', methods=['POST'])
+def calcular_precio():
+    data = request.get_json()
+    motivo = data.get('motivo')
+    cantidad = data.get('cantidad', 1)
+
+    try:
+        query = db.collection('precios').where('motivo', '==', motivo).stream()
+        precio_unitario = 0
+        for doc in query:
+            precio_unitario = doc.to_dict().get('precio', 0)
+            break  # solo uno
+        total = precio_unitario * cantidad
+        return jsonify({'total': total}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
