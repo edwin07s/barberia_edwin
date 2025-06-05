@@ -4,6 +4,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import os
 import json
+import datatime import datatime
 
 app = Flask(__name__)
 CORS(app)
@@ -19,7 +20,7 @@ db = firestore.client()
 def inicio():
     return 'Servidor Flask conectado a Firebase correctamente'
 
-# ✅ Ruta para obtener todas las fechas únicas
+# Ruta para obtener todas las fechas únicas
 @app.route('/fechas_eventos', methods=['GET'])
 def obtener_fechas_eventos():
     try:
@@ -29,13 +30,15 @@ def obtener_fechas_eventos():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ✅ Ruta para obtener datos del evento por fecha
 @app.route('/datos_evento', methods=['POST'])
 def datos_evento():
     data = request.get_json()
-    fecha = data.get('fecha')
+    fecha_str = data.get('fecha')
 
     try:
+        # Convertir cadena a objeto datetime
+        fecha = datetime.strptime(fecha_str, "%d de %B de %Y, %I:%M:%S %p UTC-6")
+
         query = db.collection('eventos').where('fecha', '==', fecha)
         resultados = query.stream()
         datos = [doc.to_dict() for doc in resultados]
@@ -43,7 +46,7 @@ def datos_evento():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ✅ Ruta para actualizar el abono de un evento por fecha
+#  Ruta para actualizar el abono de un evento por fecha
 @app.route('/actualizar_abono', methods=['POST'])
 def actualizar_abono():
     data = request.get_json()
@@ -61,6 +64,5 @@ def actualizar_abono():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ✅ CORRECTO
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
