@@ -5,43 +5,21 @@ from firebase_admin import credentials, firestore
 import os
 import json
 
-# Inicializar la app Flask
 app = Flask(__name__)
 CORS(app)
 
-# Cargar las credenciales desde la variable de entorno (en Render)
+# Cargar credenciales desde variable de entorno
 json_cred = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON")
-
-# Inicializar Firebase Admin con las credenciales
 cred = credentials.Certificate(json.loads(json_cred))
 firebase_admin.initialize_app(cred)
 
-# Crear cliente de Firestore
 db = firestore.client()
 
-# Ruta de prueba
 @app.route('/')
 def inicio():
     return 'Servidor Flask conectado a Firebase correctamente'
 
-# Ruta para obtener todos los usuarios
-@app.route('/eventos', methods=['GET'])
-def obtener_usuarios():
-    try:
-        docs = db.collection('eventos').stream()
-        usuarios = []
-
-        for doc in docs:
-            datos = doc.to_dict()
-            datos['id'] = doc.id  # incluir el ID del documento si es necesario
-            usuarios.append(datos)
-
-        return jsonify(eventos), 200
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# Ruta para obtener todas las fechas únicas en eventos
+# ✅ Ruta para obtener todas las fechas únicas
 @app.route('/fechas_eventos', methods=['GET'])
 def obtener_fechas_eventos():
     try:
@@ -51,7 +29,7 @@ def obtener_fechas_eventos():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Ruta para obtener los datos de una fecha específica
+# ✅ Ruta para obtener datos del evento por fecha
 @app.route('/datos_evento', methods=['POST'])
 def datos_evento():
     data = request.get_json()
@@ -65,7 +43,7 @@ def datos_evento():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Ruta para actualizar cantidadAbono
+# ✅ Ruta para actualizar el abono de un evento por fecha
 @app.route('/actualizar_abono', methods=['POST'])
 def actualizar_abono():
     data = request.get_json()
@@ -83,6 +61,6 @@ def actualizar_abono():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Ejecutar la app
+# ✅ CORRECTO
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
